@@ -69,7 +69,7 @@ The CLI will ask you:
 
 ```bash
 # Clone the repository
-git clone <https://github.com/CodeEnthusiast09/create-express-app>
+git clone https://github.com/CodeEnthusiast09/create-express-app
 cd create-express-app
 
 # Install dependencies
