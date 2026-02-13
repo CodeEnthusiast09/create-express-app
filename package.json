@@ -1,6 +1,6 @@
 {
   "name": "@codeenthusiast09/create-express-app",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "CLI tool to generate production-ready Express TypeScript projects with flexible database options (MongoDB, PostgreSQL with Prisma or Drizzle)",
   "main": "dist/index.js",
   "bin": {
