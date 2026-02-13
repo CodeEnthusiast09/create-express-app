@@ -1,0 +1,29 @@
+# Source files (we publish compiled dist/)
+src/
+tsconfig.json
+
+# Development files
+.git/
+.gitignore
+node_modules/
+
+# Testing
+*.test.ts
+*.spec.ts
+
+# Documentation (keep README.md)
+docs/
+
+# Misc
+.DS_Store
+*.log
+.env
+.env.local
+
+# Keep these in the published package:
+# - dist/
+# - bin/
+# - templates/
+# - package.json
+# - README.md
+# - LICENSE

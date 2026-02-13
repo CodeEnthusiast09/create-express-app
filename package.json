@@ -1,11 +1,19 @@
 {
-  "name": "create-express-app",
+  "name": "@codeenthusiast09/create-express-app",
   "version": "1.0.0",
-  "description": "CLI tool to generate Express TypeScript projects with database options",
+  "description": "CLI tool to generate production-ready Express TypeScript projects with flexible database options (MongoDB, PostgreSQL with Prisma or Drizzle)",
   "main": "dist/index.js",
   "bin": {
-    "create-express-app": "./bin/cli.cjs"
+    "create-express-app": "./bin/cli.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CodeEnthusiast09/create-express-app"
+  },
+  "bugs": {
+    "url": "https://github.com/CodeEnthusiast09/create-express-app/issues"
+  },
+  "homepage": "https://github.com/CodeEnthusiast09/create-express-app#readme",
   "scripts": {
     "dev": "tsx src/index.ts",
     "build": "tsc",
@@ -17,9 +25,16 @@
     "typescript",
     "cli",
     "boilerplate",
-    "generator"
+    "generator",
+    "mongodb",
+    "postgresql",
+    "prisma",
+    "drizzle",
+    "mongoose",
+    "scaffolding",
+    "template"
   ],
-  "author": "",
+  "author": "O'Brien Taiwo <obrienadedapo15@gmail.com>",
   "license": "MIT",
   "dependencies": {
     "chalk": "^4.1.2",

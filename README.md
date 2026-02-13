@@ -1,4 +1,4 @@
-# create-express-app
+# @codeenthusiast09/create-express-app
 
 CLI tool to generate production-ready Express TypeScript projects with flexible database options.
 
@@ -6,10 +6,10 @@ CLI tool to generate production-ready Express TypeScript projects with flexible 
 
 ```bash
 # Using npx (recommended - always uses latest version)
-npx create-express-app my-project
+npx @codeenthusiast09/create-express-app my-project
 
 # Or install globally
-npm install -g create-express-app
+npm install -g @codeenthusiast09/create-express-app
 create-express-app my-project
 ```
 
@@ -69,7 +69,7 @@ The CLI will ask you:
 
 ```bash
 # Clone the repository
-git clone https://github.com/CodeEnthusiast09/create-express-app
+git clone <repo-url>
 cd create-express-app
 
 # Install dependencies
