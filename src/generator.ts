@@ -67,6 +67,9 @@ export class Generator {
    * - PostgreSQL + Prisma: Keep prisma.connection.ts, remove others
    * - PostgreSQL + Drizzle: Keep drizzle.connection.ts, remove others
    */
+  /**
+   * Configure Database
+   */
   private async configureDatabase(): Promise<void> {
     const dbPath = path.join(this.targetPath, "src", "database");
     const indexPath = path.join(dbPath, "index.ts");
@@ -94,6 +97,9 @@ export class Generator {
         await fs.remove(path.join(this.targetPath, "drizzle"));
         await fs.remove(path.join(this.targetPath, "drizzle.config.ts"));
 
+        // Generate proper Prisma schema
+        await this.generatePrismaSchema();
+
         // Update index.ts to export prisma
         await fs.writeFile(
           indexPath,
@@ -114,6 +120,41 @@ export class Generator {
   }
 
   /**
+   * Generate Prisma Schema
+   */
+  private async generatePrismaSchema(): Promise<void> {
+    const prismaDir = path.join(this.targetPath, "prisma");
+    const schemaPath = path.join(prismaDir, "schema.prisma");
+
+    const schemaContent = `// This is your Prisma schema file
+     // Learn more: https://pris.ly/d/prisma-schema
+
+     generator client {
+       provider = "prisma-client-js"
+     }
+
+     datasource db {
+      provider = "postgresql"
+      url      = env("DATABASE_URL")
+     }
+
+     // Example User model
+     // Uncomment and modify as needed
+     // model User {
+     //   id        String   @id @default(uuid())
+     //   email     String   @unique
+     //   name      String?
+     //   password  String
+     //   createdAt DateTime @default(now())
+     //   updatedAt DateTime @updatedAt
+     // }
+    `;
+
+    await fs.ensureDir(prismaDir);
+    await fs.writeFile(schemaPath, schemaContent);
+  }
+
+  /**
    * Update package.json
    *
    * Updates the project name in package.json
@@ -122,8 +163,22 @@ export class Generator {
     const packageJsonPath = path.join(this.targetPath, "package.json");
     const packageJson = await fs.readJson(packageJsonPath);
 
+    // Update project metadata
     packageJson.name = this.config.projectName;
     packageJson.version = "0.1.0";
+
+    // Add database-specific scripts
+    if (this.config.database === "postgresql") {
+      if (this.config.orm === "prisma") {
+        packageJson.scripts["db:migrate"] = "prisma migrate dev";
+        packageJson.scripts["db:generate"] = "prisma generate";
+        packageJson.scripts["db:studio"] = "prisma studio";
+      } else if (this.config.orm === "drizzle") {
+        packageJson.scripts["db:push"] = "drizzle-kit push:pg";
+        packageJson.scripts["db:generate"] = "drizzle-kit generate:pg";
+        packageJson.scripts["db:studio"] = "drizzle-kit studio";
+      }
+    }
 
     await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
   }

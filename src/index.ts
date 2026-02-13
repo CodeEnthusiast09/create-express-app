@@ -96,8 +96,9 @@ function showSuccessMessage(config: any): void {
   } else if (config.database === "postgresql") {
     console.log(chalk.yellow("  # Make sure PostgreSQL is running"));
     if (config.orm === "prisma") {
+      console.log(chalk.gray("  # Prisma Client already generated ✓"));
       console.log(chalk.white("  npx prisma migrate dev"));
-      console.log(chalk.white("  npx prisma generate"));
+      console.log(chalk.gray("  # Run this to create your database tables"));
     } else if (config.orm === "drizzle") {
       console.log(chalk.white("  npx drizzle-kit generate:pg"));
       console.log(chalk.white("  npx drizzle-kit push:pg"));

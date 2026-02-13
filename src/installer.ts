@@ -36,6 +36,8 @@ export class Installer {
         stdio: "pipe",
       });
 
+      spinner.text = "Installing database dependencies...";
+
       // Install database-specific dependencies
       await this.installDatabaseDependencies();
 
@@ -57,8 +59,9 @@ export class Installer {
       deps.push("mongoose");
     } else if (this.config.database === "postgresql") {
       if (this.config.orm === "prisma") {
-        deps.push("@prisma/client");
-        devDeps.push("prisma");
+        // Pin to Prisma 6 for stability
+        deps.push("@prisma/client@^6.0.0");
+        devDeps.push("prisma@^6.0.0");
       } else if (this.config.orm === "drizzle") {
         deps.push("drizzle-orm", "pg");
         devDeps.push("drizzle-kit", "@types/pg");
@@ -79,6 +82,32 @@ export class Installer {
         cwd: this.projectPath,
         stdio: "pipe",
       });
+    }
+
+    // Run post-install tasks for specific ORMs
+    await this.runPostInstallTasks();
+  }
+
+  /**
+   * Run Post-Install Tasks
+   *
+   * Runs necessary setup commands after dependencies are installed
+   */
+  private async runPostInstallTasks(): Promise<void> {
+    if (this.config.database === "postgresql" && this.config.orm === "prisma") {
+      const spinner = ora("Generating Prisma Client...").start();
+
+      try {
+        await execa("npx", ["prisma", "generate"], {
+          cwd: this.projectPath,
+          stdio: "pipe",
+        });
+
+        spinner.succeed(chalk.green("Prisma Client generated"));
+      } catch (error) {
+        spinner.fail(chalk.red("Failed to generate Prisma Client"));
+        throw error;
+      }
     }
   }
 
