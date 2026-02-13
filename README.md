@@ -1,5 +1,8 @@
 # @codeenthusiast09/create-express-app
 
+[![npm version](https://badge.fury.io/js/@codeenthusiast09%2Fcreate-express-app.svg)](https://www.npmjs.com/package/@codeenthusiast09/create-express-app)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 CLI tool to generate production-ready Express TypeScript projects with flexible database options.
 
 ## Usage
@@ -69,7 +72,7 @@ The CLI will ask you:
 
 ```bash
 # Clone the repository
-git clone <repo-url>
+git clone https://github.com/CodeEnthusiast09/create-express-app.git
 cd create-express-app
 
 # Install dependencies
