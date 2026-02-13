@@ -13,7 +13,7 @@ npm install -g create-express-app
 create-express-app my-project
 ```
 
-## ✨ What You Get
+## What You Get
 
 - **Clean Architecture** - NestJS-inspired modular structure
 - **Type Safety** - Strict TypeScript configuration with path aliases
@@ -69,7 +69,7 @@ The CLI will ask you:
 
 ```bash
 # Clone the repository
-git clone <repo-url>
+git clone <https://github.com/CodeEnthusiast09/create-express-app>
 cd create-express-app
 
 # Install dependencies
