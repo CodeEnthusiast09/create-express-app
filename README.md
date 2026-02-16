@@ -1,7 +1,7 @@
 # @codeenthusiast09/create-express-app
 
-[![npm version](https://badge.fury.io/js/@codeenthusiast09%2Fcreate-express-app.svg)](https://www.npmjs.com/package/@codeenthusiast09/create-express-app)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm version](https://badge.fury.io/js/@codeenthusiast09%2Fcreate-express-app.svg?v=2)](https://www.npmjs.com/package/@codeenthusiast09/create-express-app)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?v=2)](https://opensource.org/licenses/MIT)
 
 CLI tool to generate production-ready Express TypeScript projects with flexible database options.
 
