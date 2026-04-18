@@ -127,28 +127,26 @@ export class Generator {
     const schemaPath = path.join(prismaDir, "schema.prisma");
 
     const schemaContent = `// This is your Prisma schema file
-     // Learn more: https://pris.ly/d/prisma-schema
+// Learn more: https://pris.ly/d/prisma-schema
 
-     generator client {
-       provider = "prisma-client-js"
-     }
+generator client {
+  provider = "prisma-client-js"
+}
 
-     datasource db {
-      provider = "postgresql"
-      url      = env("DATABASE_URL")
-     }
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
-     // Example User model
-     // Uncomment and modify as needed
-     // model User {
-     //   id        String   @id @default(uuid())
-     //   email     String   @unique
-     //   name      String?
-     //   password  String
-     //   createdAt DateTime @default(now())
-     //   updatedAt DateTime @updatedAt
-     // }
-    `;
+// model User {
+//   id        String   @id @default(uuid())
+//   email     String   @unique
+//   name      String?
+//   password  String
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+`;
 
     await fs.ensureDir(prismaDir);
     await fs.writeFile(schemaPath, schemaContent);
@@ -174,8 +172,8 @@ export class Generator {
         packageJson.scripts["db:generate"] = "prisma generate";
         packageJson.scripts["db:studio"] = "prisma studio";
       } else if (this.config.orm === "drizzle") {
-        packageJson.scripts["db:push"] = "drizzle-kit push:pg";
-        packageJson.scripts["db:generate"] = "drizzle-kit generate:pg";
+        packageJson.scripts["db:push"] = "drizzle-kit push";
+        packageJson.scripts["db:generate"] = "drizzle-kit generate";
         packageJson.scripts["db:studio"] = "drizzle-kit studio";
       }
     }

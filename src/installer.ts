@@ -126,16 +126,6 @@ export class Installer {
         stdio: "pipe",
       });
 
-      // Configure git user (for the initial commit)
-      await execa("git", ["config", "user.email", "user@example.com"], {
-        cwd: this.projectPath,
-        stdio: "pipe",
-      });
-      await execa("git", ["config", "user.name", "User"], {
-        cwd: this.projectPath,
-        stdio: "pipe",
-      });
-
       // Add all files
       await execa("git", ["add", "."], {
         cwd: this.projectPath,

@@ -2,9 +2,10 @@ import { Command } from "commander";
 import chalk from "chalk";
 import path from "path";
 import fs from "fs-extra";
-import { promptUser } from "./prompts";
+import { promptUser, ProjectConfig } from "./prompts";
 import { Generator } from "./generator";
 import { Installer } from "./installer";
+import { version } from "../package.json";
 
 /**
  * Main CLI Entry Point
@@ -23,7 +24,7 @@ const program = new Command();
 program
   .name("create-express-app")
   .description("Generate a production-ready Express TypeScript project")
-  .version("1.0.0")
+  .version(version)
   .argument("[project-name]", "Name of the project")
   .action(async (projectName?: string) => {
     try {
@@ -79,7 +80,7 @@ program
  *
  * Displays next steps for the user.
  */
-function showSuccessMessage(config: any): void {
+function showSuccessMessage(config: ProjectConfig): void {
   console.log();
   console.log(chalk.green.bold("🎉 Success! Your project is ready!"));
   console.log();
@@ -100,8 +101,8 @@ function showSuccessMessage(config: any): void {
       console.log(chalk.white("  npx prisma migrate dev"));
       console.log(chalk.gray("  # Run this to create your database tables"));
     } else if (config.orm === "drizzle") {
-      console.log(chalk.white("  npx drizzle-kit generate:pg"));
-      console.log(chalk.white("  npx drizzle-kit push:pg"));
+      console.log(chalk.white("  npx drizzle-kit generate"));
+      console.log(chalk.white("  npx drizzle-kit push"));
     }
   }
 
