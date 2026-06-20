@@ -35,6 +35,9 @@ export class Generator {
     // 2.5 Uncomment the right DATABASE_URL line in .env.example
     await this.updateEnvExample();
 
+    // 2.6 Swap in the docker-compose.yml/.env.docker variant for the chosen database
+    await this.configureDockerCompose();
+
     // 3. Update package.json with project name
     await this.updatePackageJson();
 
@@ -86,6 +89,8 @@ export class Generator {
       await fs.remove(path.join(dbPath, "prisma.connection.ts"));
       await fs.remove(path.join(dbPath, "drizzle.connection.ts"));
       await fs.remove(path.join(dbPath, "drizzle.sqlite.connection.ts"));
+      await fs.remove(path.join(dbPath, "schema.ts"));
+      await fs.remove(path.join(dbPath, "schema.sqlite.ts"));
       await fs.remove(path.join(this.targetPath, "prisma"));
       await fs.remove(drizzleDir);
       await fs.remove(drizzleConfigPath);
@@ -100,12 +105,13 @@ export class Generator {
       // Remove Mongoose and the SQLite Drizzle variant
       await fs.remove(path.join(dbPath, "mongoose.connection.ts"));
       await fs.remove(path.join(dbPath, "drizzle.sqlite.connection.ts"));
-      await fs.remove(path.join(drizzleDir, "schema.sqlite.ts"));
+      await fs.remove(path.join(dbPath, "schema.sqlite.ts"));
       await fs.remove(drizzleSqliteConfigPath);
 
       if (this.config.orm === "prisma") {
         // Keep Prisma, remove Drizzle
         await fs.remove(path.join(dbPath, "drizzle.connection.ts"));
+        await fs.remove(path.join(dbPath, "schema.ts"));
         await fs.remove(drizzleDir);
         await fs.remove(drizzleConfigPath);
 
@@ -140,11 +146,8 @@ export class Generator {
       );
 
       // Swap in the SQLite schema and drizzle-kit config
-      await fs.remove(path.join(drizzleDir, "schema.ts"));
-      await fs.move(
-        path.join(drizzleDir, "schema.sqlite.ts"),
-        path.join(drizzleDir, "schema.ts"),
-      );
+      await fs.remove(path.join(dbPath, "schema.ts"));
+      await fs.move(path.join(dbPath, "schema.sqlite.ts"), path.join(dbPath, "schema.ts"));
       await fs.remove(drizzleConfigPath);
       await fs.move(drizzleSqliteConfigPath, drizzleConfigPath);
 
@@ -180,22 +183,66 @@ export class Generator {
   }
 
   /**
+   * Configure Docker Compose
+   *
+   * Swaps the docker-compose.yml/.env.docker pair for the variant matching
+   * the chosen database, then deletes the unused variants.
+   * docker-compose.yml/.env.docker are MongoDB by default; postgresql/sqlite
+   * each have a `.<database>` variant that gets renamed into place.
+   */
+  private async configureDockerCompose(): Promise<void> {
+    const composePath = path.join(this.targetPath, "docker-compose.yml");
+    const composePostgres = path.join(this.targetPath, "docker-compose.postgresql.yml");
+    const composeSqlite = path.join(this.targetPath, "docker-compose.sqlite.yml");
+    const envDockerPath = path.join(this.targetPath, ".env.docker");
+    const envDockerPostgres = path.join(this.targetPath, ".env.docker.postgresql");
+    const envDockerSqlite = path.join(this.targetPath, ".env.docker.sqlite");
+
+    if (this.config.database === "postgresql") {
+      await fs.remove(composePath);
+      await fs.move(composePostgres, composePath);
+      await fs.remove(composeSqlite);
+
+      await fs.remove(envDockerPath);
+      await fs.move(envDockerPostgres, envDockerPath);
+      await fs.remove(envDockerSqlite);
+    } else if (this.config.database === "sqlite") {
+      await fs.remove(composePath);
+      await fs.move(composeSqlite, composePath);
+      await fs.remove(composePostgres);
+
+      await fs.remove(envDockerPath);
+      await fs.move(envDockerSqlite, envDockerPath);
+      await fs.remove(envDockerPostgres);
+    } else {
+      // mongodb keeps the default docker-compose.yml/.env.docker
+      await fs.remove(composePostgres);
+      await fs.remove(composeSqlite);
+      await fs.remove(envDockerPostgres);
+      await fs.remove(envDockerSqlite);
+    }
+  }
+
+  /**
    * Generate Prisma Schema
    */
   private async generatePrismaSchema(): Promise<void> {
     const prismaDir = path.join(this.targetPath, "prisma");
     const schemaPath = path.join(prismaDir, "schema.prisma");
 
+    // Prisma 7 no longer accepts `url` in the schema's datasource block —
+    // the connection string for Migrate now lives in prisma.config.ts,
+    // and PrismaClient gets it via a driver adapter instead.
     const schemaContent = `// This is your Prisma schema file
 // Learn more: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // model User {
@@ -210,6 +257,23 @@ datasource db {
 
     await fs.ensureDir(prismaDir);
     await fs.writeFile(schemaPath, schemaContent);
+
+    const configPath = path.join(this.targetPath, "prisma.config.ts");
+    const configContent = `import 'dotenv/config';
+import { defineConfig, env } from 'prisma/config';
+
+export default defineConfig({
+  schema: 'prisma/schema.prisma',
+  migrations: {
+    path: 'prisma/migrations',
+  },
+  datasource: {
+    url: env('DATABASE_URL'),
+  },
+});
+`;
+
+    await fs.writeFile(configPath, configContent);
   }
 
   /**
@@ -225,21 +289,34 @@ datasource db {
     packageJson.name = this.config.projectName;
     packageJson.version = "0.1.0";
 
-    // Add database-specific scripts
-    if (this.config.database === "postgresql") {
+    // Add database-specific scripts and dependencies
+    if (this.config.database === "mongodb") {
+      packageJson.dependencies["mongoose"] = "^9.7.1";
+    } else if (this.config.database === "postgresql") {
       if (this.config.orm === "prisma") {
         packageJson.scripts["db:migrate"] = "prisma migrate dev";
         packageJson.scripts["db:generate"] = "prisma generate";
         packageJson.scripts["db:studio"] = "prisma studio";
+        packageJson.dependencies["@prisma/client"] = "^7.8.0";
+        packageJson.dependencies["@prisma/adapter-pg"] = "^7.8.0";
+        packageJson.devDependencies["prisma"] = "^7.8.0";
       } else if (this.config.orm === "drizzle") {
         packageJson.scripts["db:push"] = "drizzle-kit push";
         packageJson.scripts["db:generate"] = "drizzle-kit generate";
         packageJson.scripts["db:studio"] = "drizzle-kit studio";
+        packageJson.dependencies["drizzle-orm"] = "^0.45.2";
+        packageJson.dependencies["pg"] = "^8.22.0";
+        packageJson.devDependencies["drizzle-kit"] = "^0.31.10";
+        packageJson.devDependencies["@types/pg"] = "^8.20.0";
       }
     } else if (this.config.database === "sqlite") {
       packageJson.scripts["db:push"] = "drizzle-kit push";
       packageJson.scripts["db:generate"] = "drizzle-kit generate";
       packageJson.scripts["db:studio"] = "drizzle-kit studio";
+      packageJson.dependencies["drizzle-orm"] = "^0.45.2";
+      packageJson.dependencies["better-sqlite3"] = "^12.11.1";
+      packageJson.devDependencies["drizzle-kit"] = "^0.31.10";
+      packageJson.devDependencies["@types/better-sqlite3"] = "^7.6.13";
     }
 
     await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
