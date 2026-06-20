@@ -7,7 +7,7 @@ import inquirer from "inquirer";
  */
 export interface ProjectConfig {
   projectName: string;
-  database: "mongodb" | "postgresql";
+  database: "mongodb" | "postgresql" | "sqlite";
   orm?: "prisma" | "drizzle"; // Only for PostgreSQL
   includeDocker: boolean;
 }
@@ -43,6 +43,7 @@ export async function promptUser(projectName?: string): Promise<ProjectConfig> {
       choices: [
         { name: "MongoDB (with Mongoose)", value: "mongodb" },
         { name: "PostgreSQL (with Prisma or Drizzle)", value: "postgresql" },
+        { name: "SQLite (with Drizzle)", value: "sqlite" },
       ],
     },
 

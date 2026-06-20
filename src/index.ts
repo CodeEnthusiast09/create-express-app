@@ -104,6 +104,10 @@ function showSuccessMessage(config: ProjectConfig): void {
       console.log(chalk.white("  npx drizzle-kit generate"));
       console.log(chalk.white("  npx drizzle-kit push"));
     }
+  } else if (config.database === "sqlite") {
+    console.log(chalk.gray("  # No database server needed, it's a local file"));
+    console.log(chalk.white("  npx drizzle-kit generate"));
+    console.log(chalk.white("  npx drizzle-kit push"));
   }
 
   console.log();

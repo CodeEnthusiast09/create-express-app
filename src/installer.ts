@@ -66,6 +66,9 @@ export class Installer {
         deps.push("drizzle-orm", "pg");
         devDeps.push("drizzle-kit", "@types/pg");
       }
+    } else if (this.config.database === "sqlite") {
+      deps.push("drizzle-orm", "better-sqlite3");
+      devDeps.push("drizzle-kit", "@types/better-sqlite3");
     }
 
     // Install production dependencies

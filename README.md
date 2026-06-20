@@ -33,7 +33,7 @@ create-express-app my-project
 The CLI will ask you:
 
 1. **Project name** - Name of your project
-2. **Database** - MongoDB or PostgreSQL
+2. **Database** - MongoDB, PostgreSQL, or SQLite
 3. **ORM** (if PostgreSQL) - Prisma or Drizzle
 4. **Docker** - Include Docker setup? (Yes/No)
 
@@ -67,6 +67,12 @@ The CLI will ask you:
 - Better performance than Prisma
 - SQL-like API
 - For advanced users
+
+### SQLite with Drizzle
+
+- Zero setup, no database server required
+- Single file on disk
+- Best for small tools, local-only apps, and prototypes
 
 ## Development
 

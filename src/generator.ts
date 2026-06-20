@@ -73,14 +73,20 @@ export class Generator {
   private async configureDatabase(): Promise<void> {
     const dbPath = path.join(this.targetPath, "src", "database");
     const indexPath = path.join(dbPath, "index.ts");
+    const drizzleDir = path.join(this.targetPath, "drizzle");
+    // drizzle-kit looks for its config at the project root by default
+    const drizzleConfigPath = path.join(this.targetPath, "drizzle.config.ts");
+    const drizzleSqliteConfigPath = path.join(this.targetPath, "drizzle.config.sqlite.ts");
 
     if (this.config.database === "mongodb") {
       // Keep Mongoose, remove Prisma and Drizzle
       await fs.remove(path.join(dbPath, "prisma.connection.ts"));
       await fs.remove(path.join(dbPath, "drizzle.connection.ts"));
+      await fs.remove(path.join(dbPath, "drizzle.sqlite.connection.ts"));
       await fs.remove(path.join(this.targetPath, "prisma"));
-      await fs.remove(path.join(this.targetPath, "drizzle"));
-      await fs.remove(path.join(this.targetPath, "drizzle.config.ts"));
+      await fs.remove(drizzleDir);
+      await fs.remove(drizzleConfigPath);
+      await fs.remove(drizzleSqliteConfigPath);
 
       // Update index.ts to export mongoose
       await fs.writeFile(
@@ -88,14 +94,17 @@ export class Generator {
         `/**\n * Database Connection\n * \n * MongoDB with Mongoose\n */\n\nexport * from './mongoose.connection';\n`,
       );
     } else if (this.config.database === "postgresql") {
-      // Remove Mongoose
+      // Remove Mongoose and the SQLite Drizzle variant
       await fs.remove(path.join(dbPath, "mongoose.connection.ts"));
+      await fs.remove(path.join(dbPath, "drizzle.sqlite.connection.ts"));
+      await fs.remove(path.join(drizzleDir, "schema.sqlite.ts"));
+      await fs.remove(drizzleSqliteConfigPath);
 
       if (this.config.orm === "prisma") {
         // Keep Prisma, remove Drizzle
         await fs.remove(path.join(dbPath, "drizzle.connection.ts"));
-        await fs.remove(path.join(this.targetPath, "drizzle"));
-        await fs.remove(path.join(this.targetPath, "drizzle.config.ts"));
+        await fs.remove(drizzleDir);
+        await fs.remove(drizzleConfigPath);
 
         // Generate proper Prisma schema
         await this.generatePrismaSchema();
@@ -116,6 +125,31 @@ export class Generator {
           `/**\n * Database Connection\n * \n * PostgreSQL with Drizzle\n */\n\nexport * from './drizzle.connection';\n`,
         );
       }
+    } else if (this.config.database === "sqlite") {
+      // Keep Drizzle (SQLite variant), remove Mongoose, Prisma, and Postgres Drizzle
+      await fs.remove(path.join(dbPath, "mongoose.connection.ts"));
+      await fs.remove(path.join(dbPath, "prisma.connection.ts"));
+      await fs.remove(path.join(this.targetPath, "prisma"));
+      await fs.remove(path.join(dbPath, "drizzle.connection.ts"));
+      await fs.move(
+        path.join(dbPath, "drizzle.sqlite.connection.ts"),
+        path.join(dbPath, "drizzle.connection.ts"),
+      );
+
+      // Swap in the SQLite schema and drizzle-kit config
+      await fs.remove(path.join(drizzleDir, "schema.ts"));
+      await fs.move(
+        path.join(drizzleDir, "schema.sqlite.ts"),
+        path.join(drizzleDir, "schema.ts"),
+      );
+      await fs.remove(drizzleConfigPath);
+      await fs.move(drizzleSqliteConfigPath, drizzleConfigPath);
+
+      // Update index.ts to export drizzle
+      await fs.writeFile(
+        indexPath,
+        `/**\n * Database Connection\n * \n * SQLite with Drizzle\n */\n\nexport * from './drizzle.connection';\n`,
+      );
     }
   }
 
@@ -176,6 +210,10 @@ datasource db {
         packageJson.scripts["db:generate"] = "drizzle-kit generate";
         packageJson.scripts["db:studio"] = "drizzle-kit studio";
       }
+    } else if (this.config.database === "sqlite") {
+      packageJson.scripts["db:push"] = "drizzle-kit push";
+      packageJson.scripts["db:generate"] = "drizzle-kit generate";
+      packageJson.scripts["db:studio"] = "drizzle-kit studio";
     }
 
     await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
