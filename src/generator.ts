@@ -32,6 +32,9 @@ export class Generator {
     // 2. Modify files based on database choice
     await this.configureDatabase();
 
+    // 2.5 Uncomment the right DATABASE_URL line in .env.example
+    await this.updateEnvExample();
+
     // 3. Update package.json with project name
     await this.updatePackageJson();
 
@@ -154,6 +157,29 @@ export class Generator {
   }
 
   /**
+   * Update .env.example
+   *
+   * Uncomments the DATABASE_URL line matching the chosen database
+   * and comments out the other two.
+   */
+  private async updateEnvExample(): Promise<void> {
+    const envExamplePath = path.join(this.targetPath, ".env.example");
+    let content = await fs.readFile(envExamplePath, "utf-8");
+
+    const dbLines: Record<ProjectConfig["database"], string> = {
+      mongodb: "DATABASE_URL=mongodb://localhost:27017/myapp",
+      postgresql: "DATABASE_URL=postgresql://user:password@localhost:5432/myapp",
+      sqlite: "DATABASE_URL=./dev.db",
+    };
+
+    // Comment out every DATABASE_URL line, then uncomment the chosen one
+    content = content.replace(/^#?\s*(DATABASE_URL=.*)$/gm, "# $1");
+    content = content.replace(`# ${dbLines[this.config.database]}`, dbLines[this.config.database]);
+
+    await fs.writeFile(envExamplePath, content);
+  }
+
+  /**
    * Generate Prisma Schema
    */
   private async generatePrismaSchema(): Promise<void> {
@@ -228,6 +254,7 @@ datasource db {
     await fs.remove(path.join(this.targetPath, "Dockerfile"));
     await fs.remove(path.join(this.targetPath, "docker-compose.yml"));
     await fs.remove(path.join(this.targetPath, ".dockerignore"));
+    await fs.remove(path.join(this.targetPath, ".env.docker"));
   }
 
   /**
